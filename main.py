@@ -3,16 +3,16 @@ from tkinter import *
 import random
 
 
-class Grid:
-    def __int__(self, x, y, empty, label):
+class GameGrid:
+    def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.empty = empty
-        self.label = label
+        self.empty = True
+        self.label = None
 
 
 class Blocks:
-    def __int__(self, orientations, direction, bottom):
+    def __init__(self, orientations, direction, bottom):
         self.orientations = orientations
         self.direction = direction
         self.bottom = bottom
@@ -21,6 +21,21 @@ class Blocks:
 class Tetris(Frame):
     def __init__(self, master):
         Frame.__init__(self, master)
+
+        self.canvas = Canvas(master, width=100, height=250, bg='grey')
+        self.canvas.grid(row=0, column=0)
+
+        self.squares = []
+        for x in range(0, 25):
+            for y in range(0, 10):
+                self.squares.append(GameGrid(y, x))
+
+        for thing in self.squares:
+            thing.label = self.canvas.create_rectangle(thing.x*10, thing.y*10, thing.x*10+10, thing.y*10+10, outline="white", fill="black")
+        self.squares.insert(0, "squidward")
+
+    def test(self):
+        beep = "boop"
 
 
 window = Tk()
