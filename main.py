@@ -68,7 +68,7 @@ class Tetris(Frame):
                 print("making new block")
                 self.block = Blocks([[0, 5], [0, 6], [1, 5], [1, 6]], [[0, 0], [0, 0], [0, 0], [0, 0]],
                                     [[0, 0], [0, 0], [0, 0], [0, 0]], [[0, 0], [0, 0], [0, 0], [0, 0]], 1)
-            self.after(500, self.game)
+            self.after(100, self.game)
 
     def block_place(self):
         for square in self.block.base:
@@ -77,8 +77,15 @@ class Tetris(Frame):
                                     [[0, 0], [0, 0], [0, 0], [0, 0]], [[0, 0], [0, 0], [0, 0], [0, 0]], 1)
 
         for row in GameGrid.full_grid:
-            if all(self.is_empty(obj) for obj in row):
-                print("weuwuewueuwueuwueuwueu")
+            all = 0
+            for obj in row:
+                if not obj.empty:
+                    all += 1
+            if all == 10:
+                temp = GameGrid.full_grid.index(row)
+                for x in range(temp):
+                    GameGrid.full_grid[temp] = GameGrid.full_grid[temp - x]
+
     def is_empty(self, obj):
         if obj.empty:
             return False
