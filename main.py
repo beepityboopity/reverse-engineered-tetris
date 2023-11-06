@@ -26,14 +26,46 @@ class Blocks:
 
 
 class Tetris(Frame):
+    rotate = 1
     score = 0
     block = None
     colors = ["red", "blue", "green", "pink", "purple", "orange", "yellow"]
     blocklist = [
-        Blocks([[0, 5], [0, 6], [1, 5], [1, 6]], [[0, 0], [0, 0], [0, 0], [0, 0]], [[0, 0], [0, 0], [0, 0], [0, 0]],
-               [[0, 0], [0, 0], [0, 0], [0, 0]], [[0, 0], [0, 0], [0, 0], [0, 0]], 1, random.choice(colors)),
-        Blocks([[0, 5], [0, 6], [1, 5], [1, 6]], [[0, 0], [0, 0], [0, 0], [0, 0]], [[0, 0], [0, 0], [0, 0], [0, 0]],
-               [[0, 0], [0, 0], [0, 0], [0, 0]], [[0, 0], [0, 0], [0, 0], [0, 0]], 1, random.choice(colors))]
+        Blocks([[0, 5], [0, 6], [1, 5], [1, 6]],  # square
+               [[0, 5], [0, 6], [1, 5], [1, 6]],
+               [[0, 5], [0, 6], [1, 5], [1, 6]],
+               [[0, 5], [0, 6], [1, 5], [1, 6]],
+               [[0, 5], [0, 6], [1, 5], [1, 6]], 1, random.choice(colors)),
+        Blocks([[3, 4], [3, 5], [3, 6], [3, 7]],  # line
+               [[0, 6], [1, 6], [2, 6], [3, 6]],
+               [[3, 4], [3, 5], [3, 6], [3, 7]],
+               [[0, 6], [1, 6], [2, 6], [3, 6]],
+               [[3, 4], [3, 5], [3, 6], [3, 7]], 3, random.choice(colors)),
+        Blocks([[2, 4], [2, 5], [1, 5], [1, 6]],  # left s
+               [[1, 4], [1, 5], [0, 5], [0, 6]],
+               [[0, 5], [0, 5], [0, 6], [1, 6]],
+               [[1, 4], [1, 5], [0, 5], [0, 6]],
+               [[0, 5], [0, 5], [0, 6], [1, 6]], 2, random.choice(colors)),
+        Blocks([[1, 4], [1, 5], [2, 5], [2, 6]],  # right s
+               [[1, 4], [1, 5], [2, 5], [2, 6]],
+               [[0, 6], [1, 6], [1, 5], [2, 5]],
+               [[1, 4], [1, 5], [2, 5], [2, 6]],
+               [[0, 6], [1, 6], [1, 5], [2, 5]], 2, random.choice(colors)),
+        Blocks([[2, 4], [2, 5], [2, 6], [1, 6]],  # left L
+               [[2, 4], [2, 5], [2, 6], [1, 6]],
+               [[0, 5], [1, 5], [2, 5], [2, 6]],
+               [[2, 4], [1, 4], [1, 5], [1, 6]],
+               [[0, 4], [0, 5], [1, 5], [2, 5]], 2, random.choice(colors)),
+        Blocks([[1, 4], [2, 4], [2, 5], [2, 6]],  # right L
+               [[1, 4], [2, 4], [2, 5], [2, 6]],
+               [[0, 6], [0, 5], [1, 5], [2, 5]],
+               [[2, 6], [1, 6], [1, 5], [1, 4]],
+               [[0, 5], [1, 5], [2, 5], [2, 4]], 2, random.choice(colors)),
+        Blocks([[2, 4], [2, 5], [2, 6], [1, 5]],  # T
+               [[2, 4], [2, 5], [2, 6], [1, 5]],
+               [[0, 5], [1, 5], [2, 5], [1, 6]],
+               [[1, 4], [1, 5], [1, 6], [2, 5]],
+               [[0, 5], [1, 5], [2, 5], [1, 4]], 2, random.choice(colors))]
 
     def __init__(self, master):
         Frame.__init__(self, master)
@@ -78,7 +110,8 @@ class Tetris(Frame):
                     self.move_down()
                 else:
                     self.block_place()
-            self.after(100, self.game)
+            print(self.block.base)
+            self.after(500, self.game)
 
     def block_place(self):
         for square in self.block.base:
@@ -119,6 +152,14 @@ class Tetris(Frame):
             for a in self.block.base:
                 self.canvas.itemconfig(GameGrid.full_grid[a[0]][a[1]].label, fill="black")
                 a[0] += 1
+            for a in self.block.rotation1:
+                a[0] += 1
+            for a in self.block.rotation2:
+                a[0] += 1
+            for a in self.block.rotation3:
+                a[0] += 1
+            for a in self.block.rotation4:
+                a[0] += 1
             self.block.bottom += 1
 
     def move_keys(self, event):
@@ -137,12 +178,32 @@ class Tetris(Frame):
                 for a in self.block.base:
                     self.canvas.itemconfig(GameGrid.full_grid[a[0]][a[1]].label, fill="black")
                     a[1] += direction
+                for a in self.block.rotation1:
+                    a[1] += direction
+                for a in self.block.rotation2:
+                    a[1] += direction
+                for a in self.block.rotation3:
+                    a[1] += direction
+                for a in self.block.rotation4:
+                    a[1] += 1
 
         elif event.keysym == "Up":
             self.rotation()
 
     def rotation(self):
-        print("ee")
+        if Tetris.rotate == 1:
+            self.block.base = self.block.rotation2
+        elif Tetris.rotate == 2:
+            self.block.base = self.block.rotation3
+        elif Tetris.rotate == 3:
+            self.block.base = self.block.rotation4
+        if Tetris.rotate == 4:
+            self.block.base = self.block.rotation1
+
+        if Tetris.rotate == 4:
+            Tetris.rotate = 1
+        else:
+            Tetris.rotate += 1
 
     def display(self):
         for square in self.block.base:
