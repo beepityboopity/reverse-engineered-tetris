@@ -1,8 +1,7 @@
-import keyboard
 from tkinter import *
 import random
-import time
 from threading import *
+import copy
 
 
 class GameGrid:
@@ -16,18 +15,25 @@ class GameGrid:
 
 
 class Blocks:
-    def __init__(self, base, rotation1, rotation2, rotation3, bottom, color):
+    def __init__(self, base, rotation1, rotation2, rotation3, rotation4, bottom, color):
         self.rotation1 = rotation1
         self.rotation2 = rotation2
         self.rotation3 = rotation3
+        self.rotation4 = rotation4
         self.base = base
         self.bottom = bottom
         self.color = color
 
 
 class Tetris(Frame):
+    score = 0
     block = None
     colors = ["red", "blue", "green", "pink", "purple", "orange", "yellow"]
+    blocklist = [
+        Blocks([[0, 5], [0, 6], [1, 5], [1, 6]], [[0, 0], [0, 0], [0, 0], [0, 0]], [[0, 0], [0, 0], [0, 0], [0, 0]],
+               [[0, 0], [0, 0], [0, 0], [0, 0]], [[0, 0], [0, 0], [0, 0], [0, 0]], 1, random.choice(colors)),
+        Blocks([[0, 5], [0, 6], [1, 5], [1, 6]], [[0, 0], [0, 0], [0, 0], [0, 0]], [[0, 0], [0, 0], [0, 0], [0, 0]],
+               [[0, 0], [0, 0], [0, 0], [0, 0]], [[0, 0], [0, 0], [0, 0], [0, 0]], 1, random.choice(colors))]
 
     def __init__(self, master):
         Frame.__init__(self, master)
@@ -35,8 +41,13 @@ class Tetris(Frame):
         self.canvas = Canvas(master, width=210, height=500, bg='grey')
         self.canvas.grid(row=0, column=0)
 
-        self.start_button = Button(master, text="start", command= lambda: self.start()).grid(row=0, column=1)
-        self.stop_button = Button(master, text="stop", command=lambda: self.stop()).grid(row=0, column=2)
+        self.start_button = (Button(master, text="start", command= lambda: self.start()))
+        self.start_button.grid(row=0, column=1)
+        self.stop_button = (Button(master, text="stop", command=lambda: self.stop()))
+        self.stop_button.grid(row=0, column=2)
+
+        self.score_label = Label(master, text="Score: {}" .format(Tetris.score))
+        self.score_label.grid(row=0, column=3)
 
         for x in range(0, 25):
             GameGrid.full_grid.append([])
@@ -46,37 +57,33 @@ class Tetris(Frame):
         for collection in GameGrid.full_grid:
             for thing in collection:
                 thing.label = self.canvas.create_rectangle(thing.y*20, thing.x*20, thing.y*20+20, thing.x*20+20, outline="white", fill="black")
-
-        self.block = Blocks([[0, 5], [0, 6], [1, 5], [1, 6]], [[0, 0], [0, 0], [0, 0], [0, 0]], [[0, 0], [0, 0], [0, 0], [0, 0]], [[0, 0], [0, 0], [0, 0], [0, 0]], 1, random.choice(Tetris.colors))
-
+        self.block = copy.deepcopy(random.choice(Tetris.blocklist))
     gaming = False
+
     def start(self):
         Tetris.gaming = True
-        movethread = Thread(target=self.game)
-        movethread.start()
+        move_thread = Thread(target=self.game)
+        move_thread.start()
         t1 = Thread(target=self.display)
         t1.start()
+
     def stop(self):
         Tetris.gaming = False
 
     def game(self):
         if Tetris.gaming:
+            self.score_label.config(text="{}".format(Tetris.score))
             if self.block is not None:
                 if self.block.bottom < 24:
                     self.move_down()
                 else:
                     self.block_place()
-            if self.block is None:
-                self.block = Blocks([[0, 5], [0, 6], [1, 5], [1, 6]], [[0, 0], [0, 0], [0, 0], [0, 0]],
-                                    [[0, 0], [0, 0], [0, 0], [0, 0]], [[0, 0], [0, 0], [0, 0], [0, 0]], 1, random.choice(Tetris.colors))
-            self.after(1000, self.game)
+            self.after(100, self.game)
 
     def block_place(self):
         for square in self.block.base:
             GameGrid.full_grid[square[0]][square[1]].empty = False
-        self.block = Blocks([[0, 5], [0, 6], [1, 5], [1, 6]], [[0, 0], [0, 0], [0, 0], [0, 0]],
-                                    [[0, 0], [0, 0], [0, 0], [0, 0]], [[0, 0], [0, 0], [0, 0], [0, 0]], 1, random.choice(Tetris.colors))
-
+        self.block = copy.deepcopy(random.choice(Tetris.blocklist))
         for row in GameGrid.full_grid:
             temp = 10
             for obj in row:
@@ -85,6 +92,8 @@ class Tetris(Frame):
 
             if temp == 10:
                 row_index = GameGrid.full_grid.index(row)
+                Tetris.score += 10
+                self.score_label.config(text="Score: {}" .format(Tetris.score))
                 self.falling(row_index)
 
     def falling(self, count):
@@ -97,6 +106,7 @@ class Tetris(Frame):
                 color = self.canvas.itemcget(GameGrid.full_grid[count - 1][obj_index].label, "fill")
                 self.canvas.itemconfig(obj.label, fill=color)
             self.falling(count-1)
+
     def move_down(self):
         truth = 0
         for a in self.block.base:
@@ -113,6 +123,7 @@ class Tetris(Frame):
 
     def move_keys(self, event):
         if event.keysym in ["Left", "Right", "a", "d"]:
+            direction = 0
             if event.keysym == "Left" or event.keysym == "a":
                 direction = -1
             elif event.keysym == "Right" or event.keysym == "d":
@@ -128,7 +139,10 @@ class Tetris(Frame):
                     a[1] += direction
 
         elif event.keysym == "Up":
-            print("weuweuwueuwueuwueu")
+            self.rotation()
+
+    def rotation(self):
+        print("ee")
 
     def display(self):
         for square in self.block.base:
