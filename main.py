@@ -26,46 +26,47 @@ class Blocks:
 
 
 class Tetris(Frame):
+    time = 500
+    default = 500
     rotate = 1
     score = 0
     block = None
-    colors = ["red", "blue", "green", "pink", "purple", "orange", "yellow"]
     blocklist = [
         Blocks([[0, 5], [0, 6], [1, 5], [1, 6]],  # square
                [[0, 5], [0, 6], [1, 5], [1, 6]],
                [[0, 5], [0, 6], [1, 5], [1, 6]],
                [[0, 5], [0, 6], [1, 5], [1, 6]],
-               [[0, 5], [0, 6], [1, 5], [1, 6]], 1, random.choice(colors)),
+               [[0, 5], [0, 6], [1, 5], [1, 6]], 1, "SkyBlue1"),
         Blocks([[0, 6], [1, 6], [2, 6], [3, 6]],  # line
                [[0, 6], [1, 6], [2, 6], [3, 6]],
                [[3, 4], [3, 5], [3, 6], [3, 7]],
                [[0, 6], [1, 6], [2, 6], [3, 6]],
-               [[3, 4], [3, 5], [3, 6], [3, 7]], 3, random.choice(colors)),
+               [[3, 4], [3, 5], [3, 6], [3, 7]], 3, "LightGoldenrod2"),
         Blocks([[2, 4], [2, 5], [1, 5], [1, 6]],  # left s
                [[2, 4], [2, 5], [1, 5], [1, 6]],
                [[0, 5], [1, 5], [1, 6], [2, 6]],
                [[2, 4], [2, 5], [1, 5], [1, 6]],
-               [[0, 5], [1, 5], [1, 6], [2, 6]], 2, random.choice(colors)),
+               [[0, 5], [1, 5], [1, 6], [2, 6]], 2, "red3"),
         Blocks([[1, 4], [1, 5], [2, 5], [2, 6]],  # right s
                [[1, 4], [1, 5], [2, 5], [2, 6]],
                [[0, 6], [1, 6], [1, 5], [2, 5]],
                [[1, 4], [1, 5], [2, 5], [2, 6]],
-               [[0, 6], [1, 6], [1, 5], [2, 5]], 2, random.choice(colors)),
+               [[0, 6], [1, 6], [1, 5], [2, 5]], 2, "chartreuse2"),
         Blocks([[2, 4], [2, 5], [2, 6], [1, 6]],  # left L
                [[2, 4], [2, 5], [2, 6], [1, 6]],
                [[0, 5], [1, 5], [2, 5], [2, 6]],
                [[2, 4], [1, 4], [1, 5], [1, 6]],
-               [[0, 4], [0, 5], [1, 5], [2, 5]], 2, random.choice(colors)),
+               [[0, 4], [0, 5], [1, 5], [2, 5]], 2, "royal blue"),
         Blocks([[1, 4], [2, 4], [2, 5], [2, 6]],  # right L
                [[1, 4], [2, 4], [2, 5], [2, 6]],
                [[0, 6], [0, 5], [1, 5], [2, 5]],
                [[2, 6], [1, 6], [1, 5], [1, 4]],
-               [[0, 5], [1, 5], [2, 5], [2, 4]], 2, random.choice(colors)),
+               [[0, 5], [1, 5], [2, 5], [2, 4]], 2, "salmon"),
         Blocks([[2, 4], [2, 5], [2, 6], [1, 5]],  # T
                [[2, 4], [2, 5], [2, 6], [1, 5]],
                [[0, 5], [1, 5], [2, 5], [1, 6]],
                [[1, 4], [1, 5], [1, 6], [2, 5]],
-               [[0, 5], [1, 5], [2, 5], [1, 4]], 2, random.choice(colors))]
+               [[0, 5], [1, 5], [2, 5], [1, 4]], 2, "DarkOrchid1")]
 
     def __init__(self, master):
         Frame.__init__(self, master)
@@ -112,12 +113,13 @@ class Tetris(Frame):
                     self.move_down()
                 else:
                     self.block_place()
-            self.after(200, self.game)
+            self.after(Tetris.time, self.game)
 
     def block_place(self):
         for square in self.block.base:
             GameGrid.full_grid[square[0]][square[1]].empty = False
         self.block = copy.deepcopy(random.choice(Tetris.blocklist))
+        Tetris.rotate = 1
         for row in GameGrid.full_grid:
             temp = 10
             for obj in row:
@@ -179,6 +181,7 @@ class Tetris(Frame):
             for a in self.block.base:
                 self.canvas.itemconfig(GameGrid.full_grid[a[0]][a[1]].label, fill="black")
                 a[1] += direction
+                self.display()
             for a in self.block.rotation1:
                 a[1] += direction
             for a in self.block.rotation2:
@@ -187,8 +190,6 @@ class Tetris(Frame):
                 a[1] += direction
             for a in self.block.rotation4:
                 a[1] += direction
-
-        self.display()
 
     def rotation(self, event):
         if Tetris.rotate == 1:
@@ -199,7 +200,7 @@ class Tetris(Frame):
             self.block.base = copy.deepcopy(self.block.rotation4)
         if Tetris.rotate == 4:
             self.block.base = copy.deepcopy(self.block.rotation1)
-
+        self.display()
         if Tetris.rotate == 4:
             Tetris.rotate = 1
         else:
@@ -218,8 +219,8 @@ window = Tk()
 stuff = Tetris(window)
 window.geometry("450x510")
 window.title("TETRIS TETRIS TETRIS")
-window.bind("<KeyRelease-Left>", stuff.move_keys)
-window.bind("<KeyRelease-Right>", stuff.move_keys)
-window.bind("<KeyRelease-Up>", stuff.rotation)
+window.bind("<KeyPress-Left>", stuff.move_keys)
+window.bind("<KeyPress-Right>", stuff.move_keys)
+window.bind("<KeyPress-Up>", stuff.rotation)
 window.mainloop()
     
