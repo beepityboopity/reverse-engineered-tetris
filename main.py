@@ -2,6 +2,7 @@ from tkinter import *
 import random
 from threading import *
 import copy
+import time
 
 
 class GameGrid:
@@ -26,8 +27,8 @@ class Blocks:
 
 
 class Tetris(Frame):
-    time = 500
-    default = 500
+    time = 250
+    default = 250
     rotate = 1
     score = 0
     block = None
@@ -113,7 +114,7 @@ class Tetris(Frame):
                     self.move_down()
                 else:
                     self.block_place()
-            self.after(Tetris.time, self.game)
+            self.after(int(Tetris.time), self.game)
 
     def block_place(self):
         for square in self.block.base:
@@ -166,6 +167,12 @@ class Tetris(Frame):
             self.block.bottom += 1
         self.display()
 
+    def fast_down(self, event):
+        Tetris.time = 0.2*Tetris.default
+
+    def fast_down_release(self, event):
+        Tetris.time = Tetris.default
+
     def move_keys(self, event):
         direction = 0
         if event.keysym == "Left":
@@ -193,18 +200,28 @@ class Tetris(Frame):
 
     def rotation(self, event):
         if Tetris.rotate == 1:
-            self.block.base = copy.deepcopy(self.block.rotation2)
+            if self.check_rotate(self.block.rotation2):
+                self.block.base = copy.deepcopy(self.block.rotation2)
         elif Tetris.rotate == 2:
-            self.block.base = copy.deepcopy(self.block.rotation3)
+            if self.check_rotate(self.block.rotation3):
+                self.block.base = copy.deepcopy(self.block.rotation3)
         elif Tetris.rotate == 3:
-            self.block.base = copy.deepcopy(self.block.rotation4)
+            if self.check_rotate(self.block.rotation4):
+                self.block.base = copy.deepcopy(self.block.rotation4)
         if Tetris.rotate == 4:
-            self.block.base = copy.deepcopy(self.block.rotation1)
+            if self.check_rotate(self.block.rotation1):
+                self.block.base = copy.deepcopy(self.block.rotation1)
         self.display()
         if Tetris.rotate == 4:
             Tetris.rotate = 1
         else:
             Tetris.rotate += 1
+
+    def check_rotate(self, orientation):
+        if all(GameGrid.full_grid[coord[0]][coord[1]].empty for coord in orientation) and all(coord[1] >= 0 for coord in orientation):
+            return True
+        else:
+            return False
 
     def display(self):
         for row in GameGrid.full_grid:
@@ -222,5 +239,7 @@ window.title("TETRIS TETRIS TETRIS")
 window.bind("<KeyPress-Left>", stuff.move_keys)
 window.bind("<KeyPress-Right>", stuff.move_keys)
 window.bind("<KeyPress-Up>", stuff.rotation)
+window.bind("<KeyPress-Down>", stuff.fast_down)
+window.bind("<KeyRelease-Down>", stuff.fast_down_release)
 window.mainloop()
     
