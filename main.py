@@ -2,7 +2,7 @@ from tkinter import *
 import random
 from threading import *
 import copy
-import time
+from tkinter import messagebox
 
 
 class GameGrid:
@@ -30,7 +30,7 @@ class Tetris(Frame):
     time = 250
     default = 250
     rotate = 1
-    score = 0
+    score = 000000
     block = None
     blocklist = [
         Blocks([[0, 5], [0, 6], [1, 5], [1, 6]],  # square
@@ -72,16 +72,16 @@ class Tetris(Frame):
     def __init__(self, master):
         Frame.__init__(self, master)
 
-        self.canvas = Canvas(master, width=210, height=500, bg='grey')
-        self.canvas.grid(row=0, column=0)
+        self.canvas = Canvas(master, width=200, height=440, bg='grey')
+        self.canvas.grid(row=0, column=3)
 
         self.start_button = (Button(master, text="start", command=lambda: self.start()))
-        self.start_button.grid(row=0, column=1)
-        self.stop_button = (Button(master, text="stop", command=lambda: self.stop()))
-        self.stop_button.grid(row=0, column=2)
+        self.start_button.grid(row=0, column=0)
+        self.stop_button = (Button(master, text="pause", command=lambda: self.stop()))
+        self.stop_button.grid(row=0, column=1)
 
-        self.score_label = Label(master, text="Score: {}" .format(Tetris.score))
-        self.score_label.grid(row=0, column=3)
+        self.score_label = Label(master, text="Score: {}" .format(Tetris.score), width=10)
+        self.score_label.grid(row=0, column=2)
 
         self.bees = 8335
 
@@ -90,10 +90,13 @@ class Tetris(Frame):
             for y in range(0, 10):
                 GameGrid.full_grid[-1].append(GameGrid(x, y))
 
+        temp = 0
         for collection in GameGrid.full_grid:
+
             for thing in collection:
-                thing.label = self.canvas.create_rectangle(thing.y*20, thing.x*20, thing.y*20+20, thing.x*20+20,
+                thing.label = self.canvas.create_rectangle(thing.y*20, (thing.x-3)*20, thing.y*20+20, (thing.x-3)*20+20,
                                                            outline="white", fill="black")
+            temp += 1
         self.block = copy.deepcopy(random.choice(Tetris.blocklist))
     gaming = False
 
@@ -108,7 +111,7 @@ class Tetris(Frame):
 
     def game(self):
         if Tetris.gaming:
-            self.score_label.config(text="{}".format(Tetris.score))
+            self.score_label.config(text="Score: {}".format(Tetris.score))
             if self.block is not None:
                 if self.block.bottom < 24:
                     self.move_down()
@@ -119,6 +122,8 @@ class Tetris(Frame):
     def block_place(self):
         for square in self.block.base:
             GameGrid.full_grid[square[0]][square[1]].empty = False
+        if self.block.bottom <= 3:
+            self.loss()
         self.block = copy.deepcopy(random.choice(Tetris.blocklist))
         Tetris.rotate = 1
         for row in GameGrid.full_grid:
@@ -132,6 +137,19 @@ class Tetris(Frame):
                 Tetris.score += 10
                 self.score_label.config(text="Score: {}" .format(Tetris.score))
                 self.falling(row_index)
+
+    def loss(self):
+        self.stop()
+        if messagebox.showinfo("TETRIS TETRIS TETRIS", "Game Over"):
+            Tetris.score = 0
+            Tetris.time = Tetris.default
+            for row in GameGrid.full_grid:
+                for square in row:
+                    square.empty = True
+                    self.block = None
+                    self.display()
+                    self.block = copy.deepcopy(random.choice(Tetris.blocklist))
+
 
     def falling(self, count):
         if count == 0:
@@ -228,13 +246,14 @@ class Tetris(Frame):
             for square in row:
                 if square.empty:
                     self.canvas.itemconfig(square.label, fill="black")
-        for square in self.block.base:
-            self.canvas.itemconfig(GameGrid.full_grid[square[0]][square[1]].label, fill=self.block.color)
+        if self.block is not None:
+            for square in self.block.base:
+                self.canvas.itemconfig(GameGrid.full_grid[square[0]][square[1]].label, fill=self.block.color)
 
 
 window = Tk()
 stuff = Tetris(window)
-window.geometry("450x510")
+window.geometry("450x450")
 window.title("TETRIS TETRIS TETRIS")
 window.bind("<KeyPress-Left>", stuff.move_keys)
 window.bind("<KeyPress-Right>", stuff.move_keys)
