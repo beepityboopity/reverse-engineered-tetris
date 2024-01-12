@@ -32,6 +32,8 @@ class Tetris(Frame):
     rotate = 1
     score = 000000
     block = None
+    lines_cleared = 0
+    lines_total = 0
     blocklist = [
         Blocks([[0, 5], [0, 6], [1, 5], [1, 6]],  # square
                [[0, 5], [0, 6], [1, 5], [1, 6]],
@@ -73,7 +75,7 @@ class Tetris(Frame):
         Frame.__init__(self, master)
 
         self.canvas = Canvas(master, width=200, height=440, bg='grey')
-        self.canvas.grid(row=0, column=3)
+        self.canvas.grid(row=0, column=3, rowspan=3)
 
         self.start_button = (Button(master, text="start", command=lambda: self.start()))
         self.start_button.grid(row=0, column=0)
@@ -82,6 +84,12 @@ class Tetris(Frame):
 
         self.score_label = Label(master, text="Score: {}" .format(Tetris.score), width=10)
         self.score_label.grid(row=0, column=2)
+
+        self.total_label = Label(master, text="Total lines cleared: {}".format(Tetris.lines_total), width=10)
+        self.total_label.grid(row=1, column=2)
+
+        self.cleared_label = Label(master, text="Last lines cleared: {}".format(Tetris.lines_cleared), width=10)
+        self.cleared_label.grid(row=2, column=2)
 
         self.bees = 8335
 
@@ -112,6 +120,8 @@ class Tetris(Frame):
     def game(self):
         if Tetris.gaming:
             self.score_label.config(text="Score: {}".format(Tetris.score))
+            self.total_label.config(text="Total lines cleared: {}".format(Tetris.lines_total))
+            self.cleared_label.config(text="Last lines cleared: {}".format(Tetris.lines_cleared))
             if self.block is not None:
                 if self.block.bottom < 24:
                     self.move_down()
@@ -126,6 +136,7 @@ class Tetris(Frame):
             self.loss()
         self.block = copy.deepcopy(random.choice(Tetris.blocklist))
         Tetris.rotate = 1
+        Tetris.lines_cleared = 0
         for row in GameGrid.full_grid:
             temp = 10
             for obj in row:
@@ -135,6 +146,8 @@ class Tetris(Frame):
             if temp == 10:
                 row_index = GameGrid.full_grid.index(row)
                 Tetris.score += 10
+                Tetris.lines_cleared += 1
+                Tetris.lines_total += 1
                 self.score_label.config(text="Score: {}" .format(Tetris.score))
                 self.falling(row_index)
 
@@ -200,7 +213,7 @@ class Tetris(Frame):
 
         truth = 0
         for a in self.block.base:
-            if GameGrid.full_grid[a[0]][a[1] + direction].empty and (a[1] + direction) >= 0:
+            if GameGrid.full_grid[a[0]][a[1] + direction].empty and 10 >= (a[1] + direction) >= 0:
                 truth += 1
         if truth == 4:
             for a in self.block.base:
